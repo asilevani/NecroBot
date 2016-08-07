@@ -117,13 +117,20 @@ namespace PoGo.NecroBot.Logic.State
                 await Task.Delay(2000, cancellationToken);
                 Environment.Exit(0);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                //Logger.Write(e.ToString());
                 await Task.Delay(20000, cancellationToken);
                 return this;
             }
 
             await DownloadProfile(session);
+            if (session.Profile == null)
+            {
+                await Task.Delay(20000, cancellationToken);
+                Logger.Write("Due to login failure your player profile could not be retrieved. Press any key to re-try login.", LogLevel.Warning);
+                Console.ReadKey();
+            }
 
             int maxTheoreticalItems = session.LogicSettings.TotalAmountOfPokeballsToKeep +
                 session.LogicSettings.TotalAmountOfPotionsToKeep +
@@ -169,8 +176,19 @@ namespace PoGo.NecroBot.Logic.State
 
         public async Task DownloadProfile(ISession session)
         {
-            session.Profile = await session.Client.Player.GetPlayer();
-            session.EventDispatcher.Send(new ProfileEvent { Profile = session.Profile });
+            try
+            {
+                session.Profile = await session.Client.Player.GetPlayer();
+                session.EventDispatcher.Send(new ProfileEvent { Profile = session.Profile });
+            }
+            catch (System.UriFormatException e)
+            {
+                session.EventDispatcher.Send(new ErrorEvent { Message = e.ToString() });
+            }
+            catch (Exception ex)
+            {
+                session.EventDispatcher.Send(new ErrorEvent { Message = ex.ToString() });
+            }
         }
     }
 }

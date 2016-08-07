@@ -49,10 +49,10 @@ namespace PoGo.NecroBot.Logic.Tasks
 
                     var encounter =
                         await
-                            session.Client.Encounter.EncounterIncensePokemon((long) pokemon.EncounterId,
+                            session.Client.Encounter.EncounterIncensePokemon((ulong) pokemon.EncounterId,
                                 pokemon.SpawnPointId);
 
-                    if (encounter.Result == IncenseEncounterResponse.Types.Result.IncenseEncounterSuccess)
+                    if (encounter.Result == IncenseEncounterResponse.Types.Result.IncenseEncounterSuccess && session.LogicSettings.CatchPokemon)
                     {
                         await CatchPokemonTask.Execute(session, cancellationToken, encounter, pokemon);
                     }
